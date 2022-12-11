@@ -8,11 +8,18 @@ import random
 from PIL import Image as image
 from PIL import ImageStat
 
+class imGenExp(Exception):
+	def __init__(self, message="", code=0):
+		self.message = message
+		self.code = code
+		super().__init__(self.message, self.code)
+
+
 def print_help():
 	print("	-h - print this message\n"
 	      "	--source-dir=<source dir> - specify source images directory\n"
 	      "	--target=<target path> - specify target image name\n"
-	      "	--size-multiplier=<float(0.1-1)> - sticker size modification\n")
+	      "	-s, --size-multiplier=<float(0.1-1)> - sticker size modification\n")
 
 class imageGenerator():
 	imageSize = (0, 0)
@@ -23,14 +30,29 @@ class imageGenerator():
 	sizeCooficient = 0.4 #sticker size cooficient
 
 
-	def __init__(this, size=(3840, 2160), source_dir="./source-images", target_path="./output-image"):
+	def __init__(this, size=(3840, 2160), source_dir="./source-images", target_path="./output-image.png"):
 		this.imageSize = size
 		this.source_dir = source_dir
-		this.target_path = target_path + ".png"
+		this.target_path = target_path
+
+
+	def checkParams(this):
+		if not (this.target_path):
+			raise imGenExp("target-path not spcified", -1)
+		if not (this.source_dir):
+			raise imGenExp("source-dir not spcified", -1)
+		if not (os.path.exists(this.source_dir)):
+			raise imGenExp(("source-dir", this.source_dir, "not exists"), -2)
+		if not (os.path.isdir(this.source_dir)):
+			raise imGenExp(("source-dir", this.source_dir, "is not directory"), -1)
+		if not (os.listdir(this.source_dir)):
+			raise imGenExp(("source-dir", this.source_dir, "is empty"), -1)
+		if (this.sizeCooficient > 1) or (this.sizeCooficient <= 0):
+			raise imGenExp("size-multiplier invalid. must be in range of 0.1-1", -1)
 
 
 	def readImages(this):
-		print("reading images")
+		print("Reading images")
 		for file in os.scandir(this.source_dir):
 			tmpImage = image.open(this.source_dir + "/" + file.name, formats=["png"])
 			xSize = int(tmpImage.size[0]*this.sizeCooficient)
@@ -38,7 +60,9 @@ class imageGenerator():
 			tmpImage = tmpImage.resize((xSize, ySize))
 			this.avImageSize = ((tmpImage.size[0] + this.avImageSize[0])//2, (tmpImage.size[1] + this.avImageSize[1])//2)
 			this.imageList.append(tmpImage)
-		print("average image size", this.avImageSize)
+		if not this.imageList:
+			raise imGenExp("failed to read images from source-dir", -1)
+		print("Average image size", this.avImageSize)
 
 
 	def buildGrid(this):
@@ -46,7 +70,7 @@ class imageGenerator():
 		x = 0
 		y = 0
 
-		print("generating grid")
+		print("Generating grid")
 
 		while (x < this.imageSize[0]) and (y < this.imageSize[1]):
 			grid.append((x, y))
@@ -54,11 +78,13 @@ class imageGenerator():
 			if x > this.imageSize[0]:
 				x = 0
 				y += this.avImageSize[1]//2
+		if not (grid):
+			raise imGenExp("failed to generate pivot grid", -1)
 		return grid;
 
 
 	def placeImages(this, grid):
-		print("placing images")
+		print("Placing images")
 		target = image.new("RGBA", this.imageSize)
 		while (len(grid)):
 			place = random.choice(grid)
@@ -78,8 +104,18 @@ class imageGenerator():
 
 
 	def create(this):
-		this.readImages()
-		grid = this.buildGrid()
+		try:
+			this.readImages()
+		except imGenExp as exp:
+			print("ERROR:", exp.message)
+			os._exit(exp.code)
+
+		try:
+			grid = this.buildGrid()
+		except imGenExp as exp:
+			print("ERROR:", exp.message)
+			os._exit(exp.code)
+
 		this.stkImage = this.placeImages(grid)
 		this.bckImage = this.generateBackground(this.stkImage)
 
@@ -88,8 +124,13 @@ class imageGenerator():
 		targetImage = image.new("RGBA", this.imageSize)
 		targetImage.paste(this.bckImage, (0,0), this.bckImage.convert("RGBA"))
 		targetImage.paste(this.stkImage, (0,0), this.stkImage.convert("RGBA"))
-		targetImage.save(this.target_path)
-		print("image loaded to", this.target_path)
+		try:
+			targetImage.save(this.target_path)
+		except ValueError:
+			print("ERROR: Failed to save image. Check target file extension")
+			os._exit(-1)
+
+		print("Image loaded to", this.target_path)
 
 
 def main(argv):
@@ -113,6 +154,12 @@ def main(argv):
 			generator.target_path = arg
 		elif (opt == "--size-multiplier") or (opt == "-s"):
 			generator.sizeCooficient = float(arg)
+
+	try:
+		generator.checkParams()
+	except imGenExp as exp:
+		print("ERROR:", exp.message)
+		os._exit(exp.code)
 
 	generator.create()
 	generator.print()
