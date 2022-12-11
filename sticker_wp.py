@@ -4,6 +4,7 @@ import os
 import sys
 import getopt
 import random
+import time
 
 from PIL import Image as image
 from PIL import ImageStat
@@ -31,15 +32,12 @@ class imageGenerator():
 	sizeCooficient = 0.4 #sticker size cooficient
 
 
-	def __init__(this, size=(3840, 2160), source_dir="./source-images", target_path="./output-image.png"):
+	def __init__(this, size=(3840, 2160), source_dir="./source-images"):
 		this.imageSize = size
 		this.source_dir = source_dir
-		this.target_path = target_path
 
 
 	def checkParams(this):
-		if not (this.target_path):
-			raise imGenExp("target-path not spcified", -1)
 		if not (this.source_dir):
 			raise imGenExp("source-dir not spcified", -1)
 		if not (os.path.exists(this.source_dir)):
@@ -127,6 +125,8 @@ class imageGenerator():
 		targetImage = image.new("RGBA", this.imageSize)
 		targetImage.paste(this.bckImage, (0,0), this.bckImage.convert("RGBA"))
 		targetImage.paste(this.stkImage, (0,0), this.stkImage.convert("RGBA"))
+		if not (this.target_path):
+			this.target_path = str(int(time.time())) + ".png"
 		try:
 			targetImage.save(this.target_path)
 		except ValueError:
