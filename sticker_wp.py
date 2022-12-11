@@ -11,7 +11,8 @@ from PIL import ImageStat
 def print_help():
 	print("	-h - print this message\n"
 	      "	--source-dir=<source dir> - specify source images directory\n"
-	      "	--target=<target path> - specify target image name\n")
+	      "	--target=<target path> - specify target image name\n"
+	      "	--size-multiplier=<float(0.1-1)> - sticker size modification\n")
 
 class imageGenerator():
 	imageSize = (0, 0)
@@ -19,7 +20,7 @@ class imageGenerator():
 	source_dir = ""
 	imageList = []
 	avImageSize = (0, 0) #average image size. calculated in readImages() method
-	sizeCooficient = 0.3 #sticker size cooficient
+	sizeCooficient = 0.4 #sticker size cooficient
 
 
 	def __init__(this, size=(3840, 2160), source_dir="./source-images", target_path="./output-image"):
@@ -72,7 +73,6 @@ class imageGenerator():
 
 	def generateBackground(this, source):
 		color = ImageStat.Stat(source).median
-		print(color)
 		bckImage = image.new("RGBA", this.imageSize, (color[0], color[1], color[2]))
 		return bckImage
 
@@ -112,7 +112,7 @@ def main(argv):
 		elif opt == "--target":
 			generator.target_path = arg
 		elif (opt == "--size-multiplier") or (opt == "-s"):
-			generator.sizeCooficient = arg
+			generator.sizeCooficient = float(arg)
 
 	generator.create()
 	generator.print()
