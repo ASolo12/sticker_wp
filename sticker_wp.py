@@ -19,7 +19,8 @@ def print_help():
 	print("	-h - print this message\n"
 	      "	--source-dir=<source dir> - specify source images directory\n"
 	      "	--target=<target path> - specify target image name\n"
-	      "	-s, --size-multiplier=<float(0.1-1)> - sticker size modification\n")
+	      "	-s, --size-multiplier=<float(0.1-1)> - sticker size modification\n"
+	      "	-r, --resolution=<(1080x1024)> - target image resolution. default - 3840x2160\n")
 
 class imageGenerator():
 	imageSize = (0, 0)
@@ -62,6 +63,8 @@ class imageGenerator():
 			this.imageList.append(tmpImage)
 		if not this.imageList:
 			raise imGenExp("failed to read images from source-dir", -1)
+		if (this.avImageSize[0] > this.imageSize[0]) or (this.avImageSize[1] > this.imageSize[1]):
+			raise imGenExp("average sticker size exceeds target resolution", -1)
 		print("Average image size", this.avImageSize)
 
 
@@ -138,10 +141,11 @@ def main(argv):
 
 	try:
 		opts, args = getopt.getopt(argv,
-		                    "hs:",
+		                    "hs:r:",
 		                    ["source-dir=",
 		                     "target=",
-		                     "size-multiplier="])
+		                     "size-multiplier=",
+		                     "resolution="])
 	except getopt.GetoptError:
 		print_help()
 		sys.exit(-1)
@@ -154,6 +158,9 @@ def main(argv):
 			generator.target_path = arg
 		elif (opt == "--size-multiplier") or (opt == "-s"):
 			generator.sizeCooficient = float(arg)
+		elif (opt == "--resolution") or (opt == "-r"):
+			width, height = arg.split("x", 2)
+			generator.imageSize = (int(width), int(height))
 
 	try:
 		generator.checkParams()
