@@ -88,13 +88,13 @@ class imageGenerator():
 		print("Placing images")
 		target = image.new("RGBA", this.imageSize)
 		while (len(grid)):
-			place = random.choice(grid)
+			place = grid.pop(grid.index(random.choice(grid)))
 			stickerOffsetCompensation = ((this.avImageSize[0]//2)*-1, (this.avImageSize[1]//2)*-1)
 			placeWithOffset = (place[0] + stickerOffsetCompensation[0], place[1] + stickerOffsetCompensation[1])
 			sticker = random.choice(this.imageList)
+			sticker = sticker.convert("RGBA")
 			sticker = sticker.rotate(random.randrange(-45, 45))
-			target.paste(sticker, placeWithOffset, sticker.convert("RGBA"))
-			grid.pop(grid.index(place))
+			target.paste(sticker, placeWithOffset, sticker)
 		return target
 
 
