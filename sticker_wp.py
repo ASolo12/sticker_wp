@@ -24,17 +24,13 @@ def print_help():
 	      "	-r, --resolution=<(1080x1024)> - target image resolution. default - 3840x2160\n")
 
 class imageGenerator():
-	imageSize = (0, 0)
-	target_path = ""
-	source_dir = ""
-	imageList = []
-	avImageSize = (0, 0) #average image size. calculated in readImages() method
-	sizeCooficient = 0.4 #sticker size cooficient
-
-
 	def __init__(this, size=(3840, 2160), source_dir="./source-images"):
 		this.imageSize = size
 		this.source_dir = source_dir
+		this.target_path = ""
+		this.imageList = []
+		this.avImageSize = (0, 0) #average image size. calculated in readImages() method
+		this.sizeCooficient = 0.4 #sticker size cooficient
 
 
 	def checkParams(this):
